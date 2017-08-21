@@ -1,5 +1,6 @@
 package lib.widget;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
@@ -352,6 +353,12 @@ public class BotWebView extends WebView{
                 if(botWebViewListener != null){
                     if("1".equals(type)){
                         botWebViewListener.showInputLay();
+                    }else if("url_back".equals(type)){
+                        if(canGoBack()){
+                            goBack();
+                        }else{
+                            ((Activity)getContext()).finish();
+                        }
                     }else if("speech".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
                         Log.e("onReceiveMsg_data", detailList.toString());
