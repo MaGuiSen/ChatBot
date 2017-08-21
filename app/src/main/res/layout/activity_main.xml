@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0f0f2d"
+    android:orientation="vertical">
+    <ImageView
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="52dp"
+        android:src="@mipmap/icon_bot_logo"
+        android:layout_width="122dp"
+        android:layout_height="42dp"/>
+
+    <ImageView
+        android:layout_centerInParent="true"
+        android:layout_marginTop="52dp"
+        android:src="@mipmap/icon_bot_center"
+        android:layout_width="300dp"
+        android:layout_height="276dp"/>
+
+    <RelativeLayout
+        android:layout_marginBottom="94dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_width="220dp"
+        android:layout_height="46dp">
+        <Button
+            android:onClick="clickToUse"
+            android:background="@drawable/round_rect_border_white_a"
+            android:textColor="#ffffffff"
+            android:text="即刻体验"
+            android:layout_width="match_parent"
+            android:layout_height="44dp" />
+        <ImageView
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="52dp"
+            android:src="@mipmap/icon_btn_bg_bottom"
+            android:layout_width="84dp"
+            android:layout_height="6dp"/>
+    </RelativeLayout>
+
+    <TextView
+        android:onClick="clickGoSeeInfo"
+        android:layout_marginBottom="50dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:textSize="14sp"
+        android:textColor="#ff7d4b"
+        android:text="查看使用说明"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</RelativeLayout>

@@ -1,0 +1,29 @@
+<resources>
+
+    <style name="AppBaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    </style>
+
+    <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/Animation.Activity.Bd</item>
+    </style>
+
+    <style name="Animation.Activity.Bd" parent="android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/activity_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/activity_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/activity_close_exit</item>
+    </style>
+
+    <!--细线形式的进度条样式-->
+    <style name="lineProgressBar" parent="@android:style/Widget.ProgressBar.Horizontal">
+        <!--设进度跳的高度-->
+        <item name="android:maxHeight">3.0dip</item>
+        <item name="android:minHeight">3.0dip</item>
+        <!--设置进度条值确定-->
+        <item name="android:indeterminateOnly">false</item>
+        <!--设置进度条图片样式-->
+        <item name="android:progressDrawable">@drawable/shape_progressbar_mini</item>
+    </style>
+
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"><!-- 背景 -->
+    <!--这里折纸背景条的颜色,形状-->
+    <item android:id="@android:id/background">
+        <shape>
+            <corners android:radius="0dip" />
+            <!--这里设置渐变颜色-->
+            <!--android:angle="270"设置见面的方向-->
+            <gradient
+                android:angle="270"
+                android:centerY="0.75"
+                android:endColor="#00000000"
+                android:startColor="#00000000" />
+        </shape>
+    </item>
+    <!--第二进度条的背景颜色-->
+    <item android:id="@android:id/secondaryProgress">
+        <clip>
+            <shape>
+                <corners android:radius="0dip" />
+                <gradient
+                    android:centerY="0.75"
+                    android:endColor="#00000000"
+                    android:startColor="#00000000" />
+            </shape>
+        </clip>
+    </item>
+    <!--第二进度条的背景颜色-->
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape>
+                <corners android:radius="0dip" />
+                <gradient
+                    android:centerY="0.75"
+                    android:endColor="@color/theme_color_orange_a"
+                    android:startColor="@color/theme_color_orange_b" />
+            </shape>
+        </clip>
+    </item>
+</layer-list>
