@@ -61,6 +61,7 @@ public class WebViewActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
+        //nihao 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
