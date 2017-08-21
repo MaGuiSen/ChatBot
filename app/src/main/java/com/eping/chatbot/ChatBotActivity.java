@@ -12,6 +12,7 @@ import android.widget.Toast;
 import lib.third.speech.IflyTTSModule;
 import lib.widget.BotWebView;
 import lib.widget.ChatBotInputView;
+import lib.widget.SpeechSettingDialog;
 
 public class ChatBotActivity extends AppCompatActivity {
     private BotWebView web_view;

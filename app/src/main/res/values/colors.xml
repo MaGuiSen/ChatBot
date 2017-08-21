@@ -11,6 +11,8 @@
 
     <!-- 主题绿色，abc..不代表等级-->
     <color name="theme_color_green_a">#ff01aa94</color>
+    <!--主题蓝色，abc..不代表等级-->
+    <color name="theme_color_blue_a">#ff6c8ad9</color>
     <!--主题灰色，abc..不代表等级-->
     <color name="theme_color_gray_a">#fff2f2f2</color>
     <color name="theme_color_gray_b">#ffb3b3b3</color>
