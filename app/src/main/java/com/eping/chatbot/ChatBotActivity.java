@@ -9,6 +9,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import lib.third.speech.IflyTTSModule;
 import lib.widget.BotWebView;
 import lib.widget.ChatBotInputView;
 
@@ -70,6 +71,7 @@ public class ChatBotActivity extends AppCompatActivity {
 
             @Override
             public void receiveSpeechData(String speechData){
+                IflyTTSModule.getInstance(getApplication()).startSpeaking(speechData, "", "");
             }
         });
         lay_chat_input = (ChatBotInputView) findViewById(R.id.lay_chat_input);
