@@ -36,7 +36,7 @@ public class ChatBotActivity extends AppCompatActivity {
             }
 
             @Override
-            public void showInputLay(){
+            public void showNativeInput(){
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -51,7 +51,7 @@ public class ChatBotActivity extends AppCompatActivity {
             }
 
             @Override
-            public void receiveSpeechData(String speechData){
+            public void receiveSpeech(String speechData){
             }
 
             @Override

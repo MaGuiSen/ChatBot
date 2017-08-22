@@ -38,7 +38,7 @@ public class BotWebView extends WebView{
     private String appId = "";//chatbot的id
     private String clientId = "";//客户端类型
     private String grantType = "";//验证类型
-    private String secretId = "";//密钥id
+    private String clientSecret = "";//密钥id
     private String deviceId = "";//设备号 uuid
     private String userId = "";//用户id：对应不同的系统的用户唯一标识
     private String indentityId = "";//访问对象id
@@ -153,8 +153,8 @@ public class BotWebView extends WebView{
         this.channelId = channelId;
         this.clientId = BotClient.clientId;
         this.grantType = BotClient.grantType;
-        this.secretId = BotClient.secretId;
-        if(TextUtils.isEmpty(this.clientId) || TextUtils.isEmpty(this.grantType) || TextUtils.isEmpty(this.secretId) ){
+        this.clientSecret = BotClient.clientSecret;
+        if(TextUtils.isEmpty(this.clientId) || TextUtils.isEmpty(this.grantType) || TextUtils.isEmpty(this.clientSecret) ){
             if(botWebViewListener != null){
                 botWebViewListener.error(1003, "初始化失败，未设置必要的参数");
             }
@@ -175,7 +175,7 @@ public class BotWebView extends WebView{
             //重新请求
             Map<String, String> params = new HashMap<>();
             params.put("device_id", deviceId);
-            params.put("secret_id", secretId);
+            params.put("client_secret", clientSecret);
             params.put("user_id", userId);
             HttpExecute.getInstance().get(HttpUrl.getIID, params, new ResponseListener<String>() {
                 @Override
@@ -228,7 +228,7 @@ public class BotWebView extends WebView{
             Map<String, String> params = new HashMap<>();
             params.put("grant_type", grantType);
             params.put("client_id", clientId);
-            params.put("client_secret", secretId);
+            params.put("client_secret", clientSecret);
             HttpExecute.getInstance().get(HttpUrl.getToken, params, new ResponseListener<String>() {
                 @Override
                 public void onSuccess(String object) {
@@ -336,9 +336,9 @@ public class BotWebView extends WebView{
     public static class BotWebViewListener {
         public void onIntentDetailUrl(String url) {}
         //显示input输入框
-        public void showInputLay(){}
+        public void showNativeInput(){}
         //接收道语音文本json对象
-        public void receiveSpeechData(String speechData){}
+        public void receiveSpeech(String speechData){}
         public void receiveFulfillments(String fulfillments){}
         public void error(int code, String errMsg){}
         public void back(){}
@@ -357,7 +357,7 @@ public class BotWebView extends WebView{
                 String type = jsonObject.optString("type", "");
                 if(botWebViewListener != null){
                     if("1".equals(type) || "show_input".equals(type)){
-                        botWebViewListener.showInputLay();
+                        botWebViewListener.showNativeInput();
                     }else if("url_back".equals(type)){
                         botWebViewListener.back();
                     }else if("fulfillments".equals(type)){
@@ -386,7 +386,7 @@ public class BotWebView extends WebView{
                                         sb.append(speechesItem);
                                         sb.append("。");
                                     }
-                                    botWebViewListener.receiveSpeechData(sb.toString());
+                                    botWebViewListener.receiveSpeech(sb.toString());
                                 }
                             }
                         }
