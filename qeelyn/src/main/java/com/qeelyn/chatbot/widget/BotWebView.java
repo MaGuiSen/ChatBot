@@ -10,7 +10,6 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.qeelyn.chatbot.api.BotClient;
 import com.qeelyn.chatbot.http.HttpExecute;
 import com.qeelyn.chatbot.http.HttpUrl;
 import com.qeelyn.chatbot.http.ResponseListener;
@@ -36,7 +36,9 @@ public class BotWebView extends WebView{
     private String token = "";//访问权限票据
     private String channelId = "";//渠道id
     private String appId = "";//chatbot的id
-    private String secretId = "";//密钥id
+    private String clientId = "";//客户端类型
+    private String grantType = "";//验证类型
+    private String clientSecret = "";//密钥id
     private String deviceId = "";//设备号 uuid
     private String userId = "";//用户id：对应不同的系统的用户唯一标识
     private String indentityId = "";//访问对象id
@@ -44,8 +46,8 @@ public class BotWebView extends WebView{
     private String gender = "";//性别
     private String language = "";//语言
     private BotWebViewListener botWebViewListener;
-    private WebViewClient webViewClient;
     boolean isJsInit = false;
+    boolean isShowWebInput = true;
 
     public BotWebView(Context context) {
         this(context, null);
@@ -53,12 +55,14 @@ public class BotWebView extends WebView{
 
     public BotWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        isJsInit = false;
         init();
     }
 
     public void init(){
         WebSettings settings = getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         setWebChromeClient(new WebChromeClient());
         super.setWebViewClient(new WebViewClient(){
@@ -75,8 +79,8 @@ public class BotWebView extends WebView{
                 if(!canLoad){
                     view.stopLoading();
                     //不是本站的url就抛出去
-                    if(webViewClient != null){
-                        webViewClient.onPageStarted(view, url, favicon);
+                    if(botWebViewListener != null){
+                        botWebViewListener.onIntentDetailUrl(url);
                     }
                     return;
                 }
@@ -86,27 +90,29 @@ public class BotWebView extends WebView{
             public void onPageFinished(WebView view, String url) {
                 //加载完成
                 initJs();
-                if(webViewClient != null){
-                    webViewClient.onPageFinished(view, url);
-                }
             }
         });
         // 注入一个js对象
         addJavascriptInterface(new JavaScriptInterface(),"JsNativeObject");
         //注入js代码，用于和前面的js对象同步调用，同步RN调用方式
-        loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)}");
+        loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};");
     }
 
     private void initJs(){
         if(isJsInit){
             return;
         }
-        isJsInit = true;
         if (!TextUtils.isEmpty(userName)) {
-            loadUrl("javascript:mockIm.setIid('" + indentityId + "');mockIm.saveUser({from_id:'" + indentityId + "',uname:'" + userName + "',gender:'" + gender + "',language:'" + language + "'},function(){mockIm.init()});");
+            loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};mockIm.setIid('" + indentityId + "');mockIm.saveUser({from_id:'" + indentityId + "',uname:'" + userName + "',gender:'" + gender + "',language:'" + language + "'},function(){mockIm.init()});");
         } else {
             //初始化js
-            loadUrl("javascript:mockIm.setIid('" + indentityId + "');mockIm.init();");
+            loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};mockIm.setIid('" + indentityId + "');mockIm.init()");
+        }
+        isJsInit = true;
+        if(isShowWebInput){
+            loadUrl("javascript:mockIm.whetherShowInput(1)");
+        }else{
+            loadUrl("javascript:mockIm.whetherShowInput(0)");
         }
     }
 
@@ -125,28 +131,15 @@ public class BotWebView extends WebView{
         return this;
     }
 
-    public BotWebView setSecretId(String secretId) {
-        this.secretId = secretId;
-        return this;
-    }
-
     public BotWebView setUserId(String userId) {
         this.userId = userId;
         return this;
     }
 
-    /** 设置连接的token*/
-    public BotWebView setToken(String token){
-        this.token = token;
-        return this;
-    }
-
     /**
-     * 只提供部分浏览器回调方法
+     * 不再向外提供方法
      */
-    public void setWebViewClient(WebViewClient webViewClient){
-        this.webViewClient = webViewClient;
-    }
+    public void setWebViewClient(WebViewClient webViewClient){}
 
     /**
      * 开启Url连接到Chatbot
@@ -157,6 +150,15 @@ public class BotWebView extends WebView{
     public void openChatbotUrl(String appId,String channelId){
         this.appId = appId;
         this.channelId = channelId;
+        this.clientId = BotClient.clientId;
+        this.grantType = BotClient.grantType;
+        this.clientSecret = BotClient.clientSecret;
+        if(TextUtils.isEmpty(this.clientId) || TextUtils.isEmpty(this.grantType) || TextUtils.isEmpty(this.clientSecret) ){
+            if(botWebViewListener != null){
+                botWebViewListener.error(1003, "初始化失败，未设置必要的参数");
+            }
+            return;
+        }
         getToken();
     }
 
@@ -172,18 +174,18 @@ public class BotWebView extends WebView{
             //重新请求
             Map<String, String> params = new HashMap<>();
             params.put("device_id", deviceId);
-            params.put("secret_id", secretId);
+            params.put("client_secret", clientSecret);
             params.put("user_id", userId);
             HttpExecute.getInstance().get(HttpUrl.getIID, params, new ResponseListener<String>() {
                 @Override
                 public void onSuccess(String object) {
                     //解析得到iid
+                    String errors = "";
                     try {
                         JSONObject jsonObject = new JSONObject(object);
-                        String errors = jsonObject.optString("errors", "");
+                        errors = jsonObject.optString("errors", "");
                         JSONObject data = jsonObject.optJSONObject("data");
-                        Log.e("getIId_errors", errors);
-                        Log.e("getIId_data", data.toString());
+                        Log.e("getIId_object", object);
                         if(TextUtils.isEmpty(errors) && data != null){
                             indentityId = data.optString("iid", "");
                             if(!TextUtils.isEmpty(indentityId)){
@@ -196,12 +198,16 @@ public class BotWebView extends WebView{
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    Toast.makeText(getContext(), "初始化机器人失败", Toast.LENGTH_LONG).show();
+                    if(botWebViewListener != null){
+                        botWebViewListener.error(1002, TextUtils.isEmpty(errors)?"初始化机器人失败":errors);
+                    }
                 }
 
                 @Override
                 public void onFailure(int errCode, String errMsg) {
-                    Toast.makeText(getContext(), "初始化机器人失败", Toast.LENGTH_LONG).show();
+                    if(botWebViewListener != null){
+                        botWebViewListener.error(1002, "初始化机器人失败");
+                    }
                 }
             });
         }else{
@@ -211,40 +217,63 @@ public class BotWebView extends WebView{
     }
 
     private void getToken(){
-        //重新请求
-        Map<String, String> params = new HashMap<>();
-        HttpExecute.getInstance().get(HttpUrl.getToken, params, new ResponseListener<String>() {
-            @Override
-            public void onSuccess(String object) {
-                //解析得到Token
-                try {
-                    JSONObject jsonObject = new JSONObject(object);
-                    String errors = jsonObject.optString("errors", "");
-                    JSONObject data = jsonObject.optJSONObject("data");
-                    Log.e("getToken_errors", errors);
-                    Log.e("getToken_data", data.toString());
-                    if(TextUtils.isEmpty(errors) && data != null){
-                        token = data.optString("token", "");
-                        if(!TextUtils.isEmpty(token)){
-                            prepareRun();
-                            return;
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                Toast.makeText(getContext(), "初始化机器人失败", Toast.LENGTH_LONG).show();
-            }
+        String tokenSaved = PreferenceUtils.getInstance(getContext()).getString(PreferenceUtils.KEY_ACCESS_TOKEN, "");
+        long tokenExpiresIn = PreferenceUtils.getInstance(getContext()).getLong(PreferenceUtils.KEY_ACCESS_TOKEN_EXPIRES_IN, 0);
+        long tokenSaveTime = PreferenceUtils.getInstance(getContext()).getLong(PreferenceUtils.KEY_ACCESS_TOKEN_SAVE_TIME, 0);
 
-            @Override
-            public void onFailure(int errCode, String errMsg) {
-                Toast.makeText(getContext(), "初始化机器人失败", Toast.LENGTH_LONG).show();
-            }
-        });
+        long timeSpace = System.currentTimeMillis()/1000 - tokenSaveTime;
+        if(TextUtils.isEmpty(tokenSaved) || timeSpace>=(tokenExpiresIn - 30)){
+            //重新请求
+            Map<String, String> params = new HashMap<>();
+            params.put("grant_type", grantType);
+            params.put("client_id", clientId);
+            params.put("client_secret", clientSecret);
+            HttpExecute.getInstance().get(HttpUrl.getToken, params, new ResponseListener<String>() {
+                @Override
+                public void onSuccess(String object) {
+                    String errors = "";
+                    //解析得到Token
+                    try {
+                        Log.e("getToken_object", object);
+                        JSONObject jsonObject = new JSONObject(object);
+                        errors = jsonObject.optString("errors", "");
+                        JSONObject data = jsonObject.optJSONObject("data");
+                        if(TextUtils.isEmpty(errors) && data != null){
+                            token = data.optString("access_token", "");
+                            String token_type = data.optString("token_type", "");
+                            long expires_in = data.optLong("expires_in", 0);
+                            long currSeconds = System.currentTimeMillis()/1000;
+                            if(!TextUtils.isEmpty(token)){
+                                PreferenceUtils.getInstance(getContext()).save(PreferenceUtils.KEY_ACCESS_TOKEN, token);
+                                PreferenceUtils.getInstance(getContext()).save(PreferenceUtils.KEY_ACCESS_TOKEN_EXPIRES_IN, expires_in);
+                                PreferenceUtils.getInstance(getContext()).save(PreferenceUtils.KEY_ACCESS_TOKEN_SAVE_TIME, currSeconds);
+                                prepareRun();
+                                return;
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    if(botWebViewListener != null){
+                        botWebViewListener.error(1001, TextUtils.isEmpty(errors)?"初始化机器人失败":errors);
+                    }
+                }
+
+                @Override
+                public void onFailure(int errCode, String errMsg) {
+                    if(botWebViewListener != null){
+                        botWebViewListener.error(1001, "初始化机器人失败");
+                    }
+                }
+            });
+        }else{
+            token = tokenSaved;
+            prepareRun();
+        }
     }
 
     private void startRun(){
-        String url = baseBotUrl + "?app_id=" + appId + "&channel_id=" + channelId + "&token=" + token;
+        String url = baseBotUrl + "?app_id=" + appId + "&channel_id=" + channelId + "&access_token=" + token;
         loadUrl(url);
     }
 
@@ -253,7 +282,10 @@ public class BotWebView extends WebView{
      * 注意:需要在页面初始化，并加载完成之后调用
      */
     public BotWebView closeWebInput(){
-        loadUrl("javascript:mockIm.whetherShowInput(0)");
+        if(isJsInit){
+            loadUrl("javascript:mockIm.whetherShowInput(0)");
+        }
+        isShowWebInput = false;
         return this;
     }
 
@@ -262,7 +294,10 @@ public class BotWebView extends WebView{
      * 注意:需要在页面初始化，并加载完成之后调用
      */
     public BotWebView openWebInput(){
-        loadUrl("javascript:mockIm.whetherShowInput(1)");
+        if(isJsInit){
+            loadUrl("javascript:mockIm.whetherShowInput(1)");
+        }
+        isShowWebInput = true;
         return this;
     }
 
@@ -281,27 +316,15 @@ public class BotWebView extends WebView{
         return this;
     }
 
-    /**
-     * 发送消息对象
-     */
-    public BotWebView sendMessage(){
-        return this;
-    }
-
-    /**
-     * 发送json文本
-     * @param json
-     * @return
-     */
-    public BotWebView sendJson(String json){
-        return this;
-    }
-
     public static class BotWebViewListener {
+        public void onIntentDetailUrl(String url) {}
         //显示input输入框
-        public void showInputLay(){}
+        public void showNativeInput(){}
         //接收道语音文本json对象
-        public void receiveSpeechData(String speechData){}
+        public void receiveSpeech(String speechData){}
+        public void receiveFulfillments(String fulfillments){}
+        public void error(int code, String errMsg){}
+        public void back(){}
     }
 
     /** 需要注入的js对象*/
@@ -312,12 +335,18 @@ public class BotWebView extends WebView{
         @JavascriptInterface
         public void onReceiveMsg(String jsonData) {
             try {
+                Log.e("onReceiveMsg", jsonData);
                 JSONObject jsonObject = new JSONObject(jsonData);
                 String type = jsonObject.optString("type", "");
-                Log.e("onReceiveMsg_type", type);
                 if(botWebViewListener != null){
-                    if("1".equals(type)){
-                        botWebViewListener.showInputLay();
+                    if("1".equals(type) || "show_input".equals(type)){
+                        botWebViewListener.showNativeInput();
+                    }else if("url_back".equals(type)){
+                        botWebViewListener.back();
+                    }else if("fulfillments".equals(type)){
+                        JSONArray detailList = jsonObject.optJSONArray("data");
+                        Log.e("onReceiveMsg_data", detailList.toString());
+                        botWebViewListener.receiveFulfillments(detailList.toString());
                     }else if("speech".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
                         Log.e("onReceiveMsg_data", detailList.toString());
@@ -340,7 +369,7 @@ public class BotWebView extends WebView{
                                         sb.append(speechesItem);
                                         sb.append("。");
                                     }
-                                    botWebViewListener.receiveSpeechData(sb.toString());
+                                    botWebViewListener.receiveSpeech(sb.toString());
                                 }
                             }
                         }

@@ -16,6 +16,10 @@ public class PreferenceUtils {
     public static final String KEY_DEVICE_ID = "device_id";//记录设备Id
     public static final String KEY_USER_ID = "user_id";//用户id
     public static final String KEY_INDENTITY_ID = "indentity_id";//用户iid
+    public static final String KEY_ACCESS_TOKEN = "access_token";//用户access_token
+    public static final String KEY_ACCESS_TOKEN_EXPIRES_IN = "access_token_expires_in";//access_token 有效时长(s)
+    public static final String KEY_ACCESS_TOKEN_SAVE_TIME = "access_token_save_time";//access_token 保存的时间
+
 
     private PreferenceUtils(Context context) {
         sp = context.getSharedPreferences("chatbot_preference_data", Context.MODE_PRIVATE);

@@ -73,8 +73,8 @@ public class ChatBotActivity extends AppCompatActivity {
             }
         });
         web_view.setUserId(userId)
-                .setUserInfo("小黄", "female", "cn")
-                .openChatbotUrl(appId, channelId);
+                .setUserInfo("小黄", "female", "zh-cn")
+                .openChatbot(appId, channelId);
         web_view.closeWebInput();
         lay_chat_input = (ChatBotInputView) findViewById(R.id.lay_chat_input);
         lay_chat_input.setListener(new ChatBotInputView.Listener() {
