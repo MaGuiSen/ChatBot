@@ -78,6 +78,7 @@ public class HttpExecute {
                         url += url.contains("?") ? (url.contains("&") ? "&" : "") : "?";
                         url += paramString;
                     }
+                    Log.e("url", url);
                     HttpURLConnection urlConn = getConnection(url, true);
                     // 判断请求是否成功
                     if (urlConn.getResponseCode() == 200) {
