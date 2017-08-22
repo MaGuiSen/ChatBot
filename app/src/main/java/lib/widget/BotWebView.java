@@ -1,6 +1,5 @@
 package lib.widget;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
@@ -11,7 +10,6 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import lib.api.BotClient;
 import lib.http.HttpExecute;
 import lib.http.HttpUrl;
 import lib.http.ResponseListener;
@@ -47,7 +46,6 @@ public class BotWebView extends WebView{
     private String gender = "";//性别
     private String language = "";//语言
     private BotWebViewListener botWebViewListener;
-    private WebViewClient webViewClient;
     boolean isJsInit = false;
 
     public BotWebView(Context context) {
@@ -56,12 +54,14 @@ public class BotWebView extends WebView{
 
     public BotWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        isJsInit = false;
         init();
     }
 
     public void init(){
         WebSettings settings = getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         setWebChromeClient(new WebChromeClient());
         super.setWebViewClient(new WebViewClient(){
@@ -78,8 +78,8 @@ public class BotWebView extends WebView{
                 if(!canLoad){
                     view.stopLoading();
                     //不是本站的url就抛出去
-                    if(webViewClient != null){
-                        webViewClient.onPageStarted(view, url, favicon);
+                    if(botWebViewListener != null){
+                        botWebViewListener.onPageStarted(view, url, favicon);
                     }
                     return;
                 }
@@ -89,15 +89,15 @@ public class BotWebView extends WebView{
             public void onPageFinished(WebView view, String url) {
                 //加载完成
                 initJs();
-                if(webViewClient != null){
-                    webViewClient.onPageFinished(view, url);
+                if(botWebViewListener != null){
+                    botWebViewListener.onPageFinished(view, url);
                 }
             }
         });
         // 注入一个js对象
         addJavascriptInterface(new JavaScriptInterface(),"JsNativeObject");
         //注入js代码，用于和前面的js对象同步调用，同步RN调用方式
-        loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)}");
+        loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};");
     }
 
     private void initJs(){
@@ -106,10 +106,10 @@ public class BotWebView extends WebView{
         }
         isJsInit = true;
         if (!TextUtils.isEmpty(userName)) {
-            loadUrl("javascript:mockIm.setIid('" + indentityId + "');mockIm.saveUser({from_id:'" + indentityId + "',uname:'" + userName + "',gender:'" + gender + "',language:'" + language + "'},function(){mockIm.init()});");
+            loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};mockIm.setIid('" + indentityId + "');mockIm.saveUser({from_id:'" + indentityId + "',uname:'" + userName + "',gender:'" + gender + "',language:'" + language + "'},function(){mockIm.init()});");
         } else {
             //初始化js
-            loadUrl("javascript:mockIm.setIid('" + indentityId + "');mockIm.init();");
+            loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};mockIm.setIid('" + indentityId + "');mockIm.init()");
         }
     }
 
@@ -128,31 +128,15 @@ public class BotWebView extends WebView{
         return this;
     }
 
-    public BotWebView setClientId(String clientId) {
-        this.clientId = clientId;
-        return this;
-    }
-
-    public BotWebView setGrantType(String grantType) {
-        this.grantType = grantType;
-        return this;
-    }
-
-    public BotWebView setSecretId(String secretId) {
-        this.secretId = secretId;
-        return this;
-    }
-
     public BotWebView setUserId(String userId) {
         this.userId = userId;
         return this;
     }
 
     /**
-     * 只提供部分浏览器回调方法
+     * 不再向外提供方法
      */
     public void setWebViewClient(WebViewClient webViewClient){
-        this.webViewClient = webViewClient;
     }
 
     /**
@@ -164,6 +148,15 @@ public class BotWebView extends WebView{
     public void openChatbotUrl(String appId,String channelId){
         this.appId = appId;
         this.channelId = channelId;
+        this.clientId = BotClient.clientId;
+        this.grantType = BotClient.grantType;
+        this.secretId = BotClient.secretId;
+        if(TextUtils.isEmpty(this.clientId) || TextUtils.isEmpty(this.grantType) || TextUtils.isEmpty(this.secretId) ){
+            if(botWebViewListener != null){
+                botWebViewListener.error(1003, "初始化失败，未设置必要的参数");
+            }
+            return;
+        }
         getToken();
     }
 
@@ -204,14 +197,14 @@ public class BotWebView extends WebView{
                         e.printStackTrace();
                     }
                     if(botWebViewListener != null){
-                        botWebViewListener.error(-2, TextUtils.isEmpty(errors)?"初始化机器人失败":errors);
+                        botWebViewListener.error(1002, TextUtils.isEmpty(errors)?"初始化机器人失败":errors);
                     }
                 }
 
                 @Override
                 public void onFailure(int errCode, String errMsg) {
                     if(botWebViewListener != null){
-                        botWebViewListener.error(-2, "初始化机器人失败");
+                        botWebViewListener.error(1002, "初始化机器人失败");
                     }
                 }
             });
@@ -260,14 +253,14 @@ public class BotWebView extends WebView{
                         e.printStackTrace();
                     }
                     if(botWebViewListener != null){
-                        botWebViewListener.error(-1, TextUtils.isEmpty(errors)?"初始化机器人失败":errors);
+                        botWebViewListener.error(1001, TextUtils.isEmpty(errors)?"初始化机器人失败":errors);
                     }
                 }
 
                 @Override
                 public void onFailure(int errCode, String errMsg) {
                     if(botWebViewListener != null){
-                        botWebViewListener.error(-1, "初始化机器人失败");
+                        botWebViewListener.error(1001, "初始化机器人失败");
                     }
                 }
             });
@@ -278,7 +271,7 @@ public class BotWebView extends WebView{
     }
 
     private void startRun(){
-        String url = baseBotUrl + "?app_id=" + appId + "&channel_id=" + channelId + "&token=" + token;
+        String url = baseBotUrl + "?app_id=" + appId + "&channel_id=" + channelId + "&access_token=" + token;
         loadUrl(url);
     }
 
@@ -332,11 +325,15 @@ public class BotWebView extends WebView{
     }
 
     public static class BotWebViewListener {
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {}
+        public void onPageFinished(WebView view, String url) {}
         //显示input输入框
         public void showInputLay(){}
         //接收道语音文本json对象
         public void receiveSpeechData(String speechData){}
+        public void receiveFulfillments(String fulfillments){}
         public void error(int code, String errMsg){}
+        public void back(){}
     }
 
     /** 需要注入的js对象*/
@@ -347,18 +344,18 @@ public class BotWebView extends WebView{
         @JavascriptInterface
         public void onReceiveMsg(String jsonData) {
             try {
+                Log.e("onReceiveMsg", jsonData);
                 JSONObject jsonObject = new JSONObject(jsonData);
                 String type = jsonObject.optString("type", "");
-                Log.e("onReceiveMsg_type", type);
                 if(botWebViewListener != null){
-                    if("1".equals(type)){
+                    if("1".equals(type) || "show_input".equals(type)){
                         botWebViewListener.showInputLay();
                     }else if("url_back".equals(type)){
-                        if(canGoBack()){
-                            goBack();
-                        }else{
-                            ((Activity)getContext()).finish();
-                        }
+                        botWebViewListener.back();
+                    }else if("fulfillments".equals(type)){
+                        JSONArray detailList = jsonObject.optJSONArray("data");
+                        Log.e("onReceiveMsg_data", detailList.toString());
+                        botWebViewListener.receiveFulfillments(detailList.toString());
                     }else if("speech".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
                         Log.e("onReceiveMsg_data", detailList.toString());

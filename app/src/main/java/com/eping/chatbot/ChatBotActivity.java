@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import lib.widget.BotWebView;
@@ -18,10 +17,7 @@ public class ChatBotActivity extends AppCompatActivity {
 
     private String channelId = "";//渠道id
     private String appId = "f65d3b77-7ab8-40fd-af56-2cd24b10ed94";//chatbot的id
-    private String secretId = "123456";//密钥id
     private String userId = "111";//用户id：对应不同的系统的用户唯一标识
-    private String clientId = "eping";//客户端类型
-    private String grantType = "client_credentials";//验证类型
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,14 +28,8 @@ public class ChatBotActivity extends AppCompatActivity {
 
     private void initView() {
         web_view = (BotWebView) findViewById(R.id.web_view);
-        web_view.setGrantType(grantType)
-                .setClientId(clientId)
-                .setSecretId(secretId)
-                .setUserId(userId)
-                .setUserInfo("小黄", "female", "cn")
-                .openChatbotUrl(appId, channelId);
-        web_view.setWebViewClient(new WebViewClient(){
-            //内被只开放：onPageStarted和onPageFinished方法
+        web_view.setBotWebViewListener(new BotWebView.BotWebViewListener(){
+            @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 //此方法会抛出非chatbot官方的url
                 Intent intent = new Intent(getApplication(), WebViewActivity.class);
@@ -47,12 +37,12 @@ public class ChatBotActivity extends AppCompatActivity {
                 startActivity(intent);
             }
 
+            @Override
             public void onPageFinished(WebView view, String url) {
                 //加载完成之后才能调用关闭输入框的方法
                 web_view.closeWebInput();
             }
-        });
-        web_view.setBotWebViewListener(new BotWebView.BotWebViewListener(){
+
             @Override
             public void showInputLay(){
                 runOnUiThread(new Runnable() {
@@ -71,7 +61,28 @@ public class ChatBotActivity extends AppCompatActivity {
             @Override
             public void receiveSpeechData(String speechData){
             }
+
+            @Override
+            public void receiveFulfillments(String fulfillments) {
+            }
+
+            @Override
+            public void back() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    if(web_view.canGoBack()){
+                        web_view.goBack();
+                    }else{
+                        finish();
+                    }
+                    }
+                });
+            }
         });
+        web_view.setUserId(userId)
+                .setUserInfo("小黄", "female", "cn")
+                .openChatbotUrl(appId, channelId);
         lay_chat_input = (ChatBotInputView) findViewById(R.id.lay_chat_input);
         lay_chat_input.setListener(new ChatBotInputView.Listener() {
             @Override
@@ -79,9 +90,5 @@ public class ChatBotActivity extends AppCompatActivity {
                 web_view.sendText(msg);
             }
         });
-    }
-
-    public void refresh(View view){
-        web_view.setSecretId(secretId).setUserId(userId).openChatbotUrl(appId, channelId);
     }
 }

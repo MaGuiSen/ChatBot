@@ -4,21 +4,13 @@ package lib.api;
  * Bot客户端访问api
  */
 public class BotClient {
+    public static String clientId = "";//客户端类型
+    public static String grantType = "";//验证类型
+    public static String secretId = "";//密钥id
 
-    private static void successCallBack(Listener listener, String object){
-        if(listener != null){
-            listener.success(object);
-        }
-    }
-
-    private static void failCallBack(Listener listener, int code, String msg){
-        if(listener != null){
-            listener.fail(code, msg);
-        }
-    }
-
-    public interface Listener<T>{
-        void success(Object obj);
-        void fail(int code, String msg);
+    public static void init(String clientId, String grantType, String secretId){
+        BotClient.clientId = clientId;
+        BotClient.grantType = grantType;
+        BotClient.secretId = secretId;
     }
 }
