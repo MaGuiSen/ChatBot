@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ChatBot.iml" filepath="$PROJECT_DIR$/ChatBot.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/appSpeech/appSpeech.iml" filepath="$PROJECT_DIR$/appSpeech/appSpeech.iml" />
       <module fileurl="file://$PROJECT_DIR$/qeelyn/qeelyn.iml" filepath="$PROJECT_DIR$/qeelyn/qeelyn.iml" />
     </modules>
   </component>

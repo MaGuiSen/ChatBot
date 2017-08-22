@@ -6,14 +6,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
-import lib.widget.BotWebView;
-import lib.widget.ChatBotInputView;
+import com.qeelyn.chatbot.widget.BotWebView;
+import com.eping.chatbot.widget.ChatBotInputView;
 
 public class ChatBotActivity extends AppCompatActivity {
     private BotWebView web_view;
     private ChatBotInputView lay_chat_input;
 
-    private String channelId = "";//渠道id
+    private String channelId = "eping_test";//渠道id
     private String appId = "f65d3b77-7ab8-40fd-af56-2cd24b10ed94";//chatbot的id
     private String userId = "111";//用户id：对应不同的系统的用户唯一标识
 

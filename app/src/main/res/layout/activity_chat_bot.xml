@@ -4,17 +4,17 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <lib.widget.BotWebView
+    <com.qeelyn.chatbot.widget.BotWebView
         android:id="@+id/web_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
-        <lib.widget.ChatBotInputView
-            android:visibility="gone"
-            android:id="@+id/lay_chat_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+    <com.eping.chatbot.widget.ChatBotInputView
+        android:visibility="gone"
+        android:id="@+id/lay_chat_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <!--<Button-->
         <!--android:layout_alignParentBottom="true"-->

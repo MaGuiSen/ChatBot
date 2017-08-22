@@ -173,7 +173,6 @@ public class BotWebView extends WebView{
                         JSONObject jsonObject = new JSONObject(object);
                         errors = jsonObject.optString("errors", "");
                         JSONObject data = jsonObject.optJSONObject("data");
-//                        Log.e("getIId_object", object);
                         if(TextUtils.isEmpty(errors) && data != null){
                             indentityId = data.optString("iid", "");
                             if(!TextUtils.isEmpty(indentityId)){
@@ -222,7 +221,6 @@ public class BotWebView extends WebView{
                     String errors = "";
                     //解析得到Token
                     try {
-//                        Log.e("getToken_object", object);
                         JSONObject jsonObject = new JSONObject(object);
                         errors = jsonObject.optString("errors", "");
                         JSONObject data = jsonObject.optJSONObject("data");
@@ -323,22 +321,19 @@ public class BotWebView extends WebView{
         @JavascriptInterface
         public void onReceiveMsg(String jsonData) {
             try {
-//                Log.e("onReceiveMsg", jsonData);
                 Log.e("onReceiveMsg", "接收到消息");
                 JSONObject jsonObject = new JSONObject(jsonData);
                 String type = jsonObject.optString("type", "");
                 if(botWebViewListener != null){
-                    if("1".equals(type) || "show_input".equals(type)){
+                    if("show_input".equals(type)){
                         botWebViewListener.showNativeInput();
                     }else if("url_back".equals(type)){
                         botWebViewListener.back();
                     }else if("fulfillments".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
-//                        Log.e("onReceiveMsg_data", detailList.toString());
                         botWebViewListener.receiveFulfillments(detailList.toString());
                     }else if("speech".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
-//                        Log.e("onReceiveMsg_data", detailList.toString());
                         if(detailList != null && detailList.length()>0){
                             //取第一条的lang
                             String lang = "";

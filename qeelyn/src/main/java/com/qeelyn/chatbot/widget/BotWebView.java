@@ -30,9 +30,6 @@ import com.qeelyn.chatbot.util.SystemUtil;
  * 机器人聊天WevView
  */
 public class BotWebView extends WebView{
-    private String baseBotUrl = "http://117.29.166.222:8099/chatbot/mock/index";//"http://maguisen.top/chatbot_test.html?r=111";
-    private String[] canLoadUrlStart = new String[]{"http://117.29.166.222:8099"};//以canLoadUrlStart开始的url字符串，可以继续加载
-
     private String token = "";//访问权限票据
     private String channelId = "";//渠道id
     private String appId = "";//chatbot的id
@@ -68,21 +65,12 @@ public class BotWebView extends WebView{
         super.setWebViewClient(new WebViewClient(){
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                boolean canLoad = false;
-                for(int i=0;i<canLoadUrlStart.length;i++){
-                    String urlStart = canLoadUrlStart[i];
-                    if(url.startsWith(urlStart)){
-                        canLoad = true;
-                        break;
-                    }
-                }
-                if(!canLoad){
+                if(!url.startsWith(BotClient.baseUrl)){
                     view.stopLoading();
                     //不是本站的url就抛出去
                     if(botWebViewListener != null){
                         botWebViewListener.onIntentDetailUrl(url);
                     }
-                    return;
                 }
             }
 
@@ -147,13 +135,13 @@ public class BotWebView extends WebView{
      * @param channelId 渠道id
      * 注意：在所有设置之后调用
      */
-    public void openChatbotUrl(String appId,String channelId){
+    public void openChatbot(String appId, String channelId){
         this.appId = appId;
         this.channelId = channelId;
         this.clientId = BotClient.clientId;
         this.grantType = BotClient.grantType;
         this.clientSecret = BotClient.clientSecret;
-        if(TextUtils.isEmpty(this.clientId) || TextUtils.isEmpty(this.grantType) || TextUtils.isEmpty(this.clientSecret) ){
+        if(TextUtils.isEmpty(BotClient.baseUrl) || TextUtils.isEmpty(this.clientId) || TextUtils.isEmpty(this.grantType) || TextUtils.isEmpty(this.clientSecret) ){
             if(botWebViewListener != null){
                 botWebViewListener.error(1003, "初始化失败，未设置必要的参数");
             }
@@ -176,7 +164,7 @@ public class BotWebView extends WebView{
             params.put("device_id", deviceId);
             params.put("client_secret", clientSecret);
             params.put("user_id", userId);
-            HttpExecute.getInstance().get(HttpUrl.getIID, params, new ResponseListener<String>() {
+            HttpExecute.getInstance().get(HttpUrl.getIID(), params, new ResponseListener<String>() {
                 @Override
                 public void onSuccess(String object) {
                     //解析得到iid
@@ -185,7 +173,7 @@ public class BotWebView extends WebView{
                         JSONObject jsonObject = new JSONObject(object);
                         errors = jsonObject.optString("errors", "");
                         JSONObject data = jsonObject.optJSONObject("data");
-                        Log.e("getIId_object", object);
+//                        Log.e("getIId_object", object);
                         if(TextUtils.isEmpty(errors) && data != null){
                             indentityId = data.optString("iid", "");
                             if(!TextUtils.isEmpty(indentityId)){
@@ -228,13 +216,13 @@ public class BotWebView extends WebView{
             params.put("grant_type", grantType);
             params.put("client_id", clientId);
             params.put("client_secret", clientSecret);
-            HttpExecute.getInstance().get(HttpUrl.getToken, params, new ResponseListener<String>() {
+            HttpExecute.getInstance().get(HttpUrl.getToken(), params, new ResponseListener<String>() {
                 @Override
                 public void onSuccess(String object) {
                     String errors = "";
                     //解析得到Token
                     try {
-                        Log.e("getToken_object", object);
+//                        Log.e("getToken_object", object);
                         JSONObject jsonObject = new JSONObject(object);
                         errors = jsonObject.optString("errors", "");
                         JSONObject data = jsonObject.optJSONObject("data");
@@ -273,7 +261,7 @@ public class BotWebView extends WebView{
     }
 
     private void startRun(){
-        String url = baseBotUrl + "?app_id=" + appId + "&channel_id=" + channelId + "&access_token=" + token;
+        String url = HttpUrl.getChatBotUrl() + "?app_id=" + appId + "&channel_id=" + channelId + "&access_token=" + token;
         loadUrl(url);
     }
 
@@ -335,7 +323,8 @@ public class BotWebView extends WebView{
         @JavascriptInterface
         public void onReceiveMsg(String jsonData) {
             try {
-                Log.e("onReceiveMsg", jsonData);
+//                Log.e("onReceiveMsg", jsonData);
+                Log.e("onReceiveMsg", "接收到消息");
                 JSONObject jsonObject = new JSONObject(jsonData);
                 String type = jsonObject.optString("type", "");
                 if(botWebViewListener != null){
@@ -345,11 +334,11 @@ public class BotWebView extends WebView{
                         botWebViewListener.back();
                     }else if("fulfillments".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
-                        Log.e("onReceiveMsg_data", detailList.toString());
+//                        Log.e("onReceiveMsg_data", detailList.toString());
                         botWebViewListener.receiveFulfillments(detailList.toString());
                     }else if("speech".equals(type)){
                         JSONArray detailList = jsonObject.optJSONArray("data");
-                        Log.e("onReceiveMsg_data", detailList.toString());
+//                        Log.e("onReceiveMsg_data", detailList.toString());
                         if(detailList != null && detailList.length()>0){
                             //取第一条的lang
                             String lang = "";

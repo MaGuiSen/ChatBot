@@ -1,7 +1,7 @@
 package com.eping.chatbot;
 import android.app.Application;
 
-import lib.api.BotClient;
+import com.qeelyn.chatbot.api.BotClient;
 
 
 public class MyApplication extends Application {

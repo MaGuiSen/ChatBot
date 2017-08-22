@@ -1,4 +1,4 @@
-package lib.widget;
+package com.eping.chatbot.widget;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
