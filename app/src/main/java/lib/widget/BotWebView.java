@@ -47,6 +47,7 @@ public class BotWebView extends WebView{
     private String language = "";//语言
     private BotWebViewListener botWebViewListener;
     boolean isJsInit = false;
+    boolean isShowWebInput = true;
 
     public BotWebView(Context context) {
         this(context, null);
@@ -79,7 +80,7 @@ public class BotWebView extends WebView{
                     view.stopLoading();
                     //不是本站的url就抛出去
                     if(botWebViewListener != null){
-                        botWebViewListener.onPageStarted(view, url, favicon);
+                        botWebViewListener.onIntentDetailUrl(url);
                     }
                     return;
                 }
@@ -89,9 +90,6 @@ public class BotWebView extends WebView{
             public void onPageFinished(WebView view, String url) {
                 //加载完成
                 initJs();
-                if(botWebViewListener != null){
-                    botWebViewListener.onPageFinished(view, url);
-                }
             }
         });
         // 注入一个js对象
@@ -104,12 +102,17 @@ public class BotWebView extends WebView{
         if(isJsInit){
             return;
         }
-        isJsInit = true;
         if (!TextUtils.isEmpty(userName)) {
             loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};mockIm.setIid('" + indentityId + "');mockIm.saveUser({from_id:'" + indentityId + "',uname:'" + userName + "',gender:'" + gender + "',language:'" + language + "'},function(){mockIm.init()});");
         } else {
             //初始化js
             loadUrl("javascript:window.postMessage = function(data){JsNativeObject.onReceiveMsg(data)};mockIm.setIid('" + indentityId + "');mockIm.init()");
+        }
+        isJsInit = true;
+        if(isShowWebInput){
+            loadUrl("javascript:mockIm.whetherShowInput(1)");
+        }else{
+            loadUrl("javascript:mockIm.whetherShowInput(0)");
         }
     }
 
@@ -280,7 +283,10 @@ public class BotWebView extends WebView{
      * 注意:需要在页面初始化，并加载完成之后调用
      */
     public BotWebView closeWebInput(){
-        loadUrl("javascript:mockIm.whetherShowInput(0)");
+        if(isJsInit){
+            loadUrl("javascript:mockIm.whetherShowInput(0)");
+        }
+        isShowWebInput = false;
         return this;
     }
 
@@ -289,7 +295,10 @@ public class BotWebView extends WebView{
      * 注意:需要在页面初始化，并加载完成之后调用
      */
     public BotWebView openWebInput(){
-        loadUrl("javascript:mockIm.whetherShowInput(1)");
+        if(isJsInit){
+            loadUrl("javascript:mockIm.whetherShowInput(1)");
+        }
+        isShowWebInput = true;
         return this;
     }
 
@@ -325,8 +334,7 @@ public class BotWebView extends WebView{
     }
 
     public static class BotWebViewListener {
-        public void onPageStarted(WebView view, String url, Bitmap favicon) {}
-        public void onPageFinished(WebView view, String url) {}
+        public void onIntentDetailUrl(String url) {}
         //显示input输入框
         public void showInputLay(){}
         //接收道语音文本json对象
